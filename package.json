@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "fluent-ffmpeg": "^2.1.2",
+    "typescript": "^5.2.2"
+  },
+  "name": "convert-ogg",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && cd dist && node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.22",
+    "@types/node": "^20.6.2"
+  }
+}
