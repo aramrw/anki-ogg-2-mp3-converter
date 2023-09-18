@@ -3,16 +3,16 @@
     "fluent-ffmpeg": "^2.1.2",
     "typescript": "^5.2.2"
   },
-  "name": "convert-ogg",
+  "name": "convertogg2mp3",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && cd dist && node index.js"
+    "start": "node dist/index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "aramrw",
   "license": "ISC",
-  "description": "",
+  "description": "Script to watch Anki's media folder and convert .ogg files to .mp3.",
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.22",
     "@types/node": "^20.6.2"
