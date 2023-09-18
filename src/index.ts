@@ -5,13 +5,8 @@ import * as os from 'os';
 import { stdout } from 'process';
 
 const ankiMediaPath = path.join(os.homedir(), 'AppData', 'Roaming', 'Anki2', 'User 1', 'collection.media');
-const outputFolder = path.join(ankiMediaPath, 'mp3'); // Folder to store the converted mp3 files
-
 const debounceDelay = 5000; // 5 seconds
 let debounceTimer;
-let isWatching = false;
-
-fs.mkdirSync(outputFolder, { recursive: true }); // Create the output folder if it doesn't exist
 
 console.clear();
 mainProgram();
@@ -78,11 +73,11 @@ async function startConversion() {
         return new Promise((resolve, reject) => {
             const oggFilePath = path.join(ankiMediaPath, oggFile);
             const mp3File = oggFile.replace('.ogg', '.mp3');
-            const mp3FilePath = path.join(outputFolder, mp3File);
+            const mp3FilePath = path.join(ankiMediaPath, mp3File);
 
             ffmpeg()
                 .input(oggFilePath) // Set the input file
-                .output(mp3FilePath) // Set the output file
+                .output(mp3FilePath) // Set the output to the same folder as the ogg files
                 .on('end', function () {
                     resolve();
                 })
@@ -104,7 +99,6 @@ async function startConversion() {
     await Promise.all(oggFiles.map(async oggFile => {
         try {
             const mp3File = oggFile.replace('.ogg', '.mp3');
-            const mp3FilePath = path.join(outputFolder, mp3File);
 
             if (files.includes(mp3File)) {
                 console.log();
