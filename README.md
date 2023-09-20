@@ -30,7 +30,7 @@ C:\Program Files
 **To replace the .**ogg** file names to .**mp3** in Anki, first go to the deck you would like to convert**.
 1. Press **Ctrl + Shift + A** to select **all cards** in the deck.
 2. On the top left, click on **Notes** -> **Find and Replace** or press **Ctrl + Alt + F**.
-3. In the **Find** box type **.ogg** & in the **Replace With** box type **.mp3**。
+3. In the **Find** box type **.ogg** & in the **Replace With** box type **.mp3**
 
 ![anki_8p7dHm8BkX](https://github.com/aramrw/anki-ogg2mp3-converter/assets/106574385/b3e1b021-af5a-40c4-aa2f-c79474ebd669)
 
