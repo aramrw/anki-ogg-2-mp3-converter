@@ -2,7 +2,7 @@
 
 ## Description
 - Anki-ogg2mp3-converter is a simple script that automatically converts .**ogg media files** to .**mp3** in the Anki collection media folder, so that the audio is playable on IOS devices.
-- It can convert the audio files as you create your cards && if you need to mass convert a deck already filled with ogg files, it will do it for you as soon as you launch anki using the **run.bat** script.
+- It can convert the audio files as you create new cards && if you need to mass convert a deck already filled with ogg files, it will do it for you as soon as you launch anki using the **run.bat** script.
 - Since Anki stores all of its media files in one folder, you dont need to specify any folders, it will just convert **all ogg files from all decks**, and you can replace the names using anki's built in regex.
 
 ## Installation
