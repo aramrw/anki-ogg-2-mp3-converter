@@ -23,7 +23,7 @@ C:\Program Files
         ├── anki.exe
         └── ...more anki files
 ```
-3. **Run:** Inside the **anki-convertogg2mp3** folder, right click **"run.bat"** and press **"Create a Shortcut"** and put the shorcut wherever you want. Click **"Yes"** and now the **run.bat** shortcut should start up Anki.
+3. **Run:** Inside the **anki-convertogg2mp3** folder, right click **"run.bat"** and press **"Create a Shortcut"**. Click **"Yes"** and now the **run.bat** and put the shorcut wherever you want, the shortcut should now start up Anki.
 4. - The program will now automatically convert all **ogg** files to **mp3** in Anki's **collections.media** folder located at **C:\Users\Your-Profile\AppData\Roaming\Anki2\User 1\collection.media** on startup.
 
 ## Usage
