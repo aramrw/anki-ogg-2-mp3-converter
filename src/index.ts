@@ -15,7 +15,6 @@ async function mainProgram() {
     try {
 
         // Convert all .ogg files in the directory on startup
-
         try {
             const files = await fs.promises.readdir(ankiMediaPath);
             const oggFiles = files.filter(file => file.endsWith('.ogg'));
