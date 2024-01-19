@@ -35,3 +35,8 @@ C:\Program Files
 ![anki_8p7dHm8BkX](https://github.com/aramrw/anki-ogg2mp3-converter/assets/106574385/b3e1b021-af5a-40c4-aa2f-c79474ebd669)
 
 **Sync the changes, and now your cards audio should be playable on IOS**.
+
+## Compatibility
+
+Anki on Windows 11 has weird artifacting issues already, and this program also causes it to flicker black sometimes. 
+If this is a problem, I recommend only launching the shorcut when after you have made your cards.
