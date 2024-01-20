@@ -38,5 +38,4 @@ C:\Program Files
 
 ## Compatibility
 
-Anki on Windows 11 has weird artifacting issues already, and this program also causes it to flicker black sometimes. 
-If this is a problem, I recommend only launching the shorcut when after you have made your cards.
+Anki on Windows 11 has weird artifacting issues already, and this program also causes it to flicker black a lot. 
