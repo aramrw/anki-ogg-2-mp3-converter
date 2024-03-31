@@ -14,6 +14,7 @@ use std::os::windows::process::CommandExt;
 struct Config {
     collections_path: String,
     anki_folder: String,
+    max_processes: u8,
 }
 
 #[allow(dead_code)]
@@ -113,16 +114,19 @@ async fn convert_for_loop(ogg_files: Vec<String>, start: Instant, tasks_per_chun
    
     }
     
+fn get_config() -> Config {
+    let config_json_string = fs::read_to_string("./config.json").unwrap();
+    let config: Config = serde_json::from_str(&config_json_string).unwrap();
+    config
+}
 
 
 fn launch_anki() -> Child {
-let config_json_string = fs::read_to_string("./config.json").unwrap();
-    let config: Config = serde_json::from_str(&config_json_string).unwrap();
+    let config = get_config();
     let anki_exe_path = format!("{}\\anki.exe", config.anki_folder);
     let child = Command::new(anki_exe_path)
         .spawn()
         .unwrap();
-
 
     // println!("Anki exited with status: {}", child);
     return child;
@@ -163,7 +167,8 @@ fn ask_collection_folder(current_dir: PathBuf) -> Result<Config, io::Error> {
     if !input.is_empty() && input.contains("collection.media") {
         let config: Config = Config {
             collections_path: input,
-            anki_folder: current_dir.to_str().unwrap().to_string()
+            anki_folder: current_dir.to_str().unwrap().to_string(),
+            max_processes: 10,
         };
         return Ok(config);
     } else {
