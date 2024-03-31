@@ -51,8 +51,8 @@ async fn main() {
     convert_for_loop(final_ogg_files, start, tasks_per_chunk).await;
 
     // let the user see all program messages before exiting
-    println!("\n\nAnki has exited, shutting down...");
-    sleep(Duration::from_secs(5));
+    println!("\n\nAnki has exited, shutting down in 2 seconds....");
+    sleep(Duration::from_secs(2));
 
     std::process::exit(status.code().unwrap_or(1));
 
