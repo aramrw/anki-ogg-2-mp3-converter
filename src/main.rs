@@ -40,9 +40,10 @@ async fn main() {
     let is_secondary_instance = args.len() > 1 && args[1] == "secondary";
     let mut start = Instant::now();
     let ogg_files = collect_ogg_files().unwrap();
-    let tasks_per_chunk = std::cmp::min(10, num_cpus::get());
-    
     // If the program gets to here it means the config is validated 
+    // get the max processes from config
+    let tasks_per_chunk = std::cmp::min(get_config().max_processes, num_cpus::get().try_into().unwrap());
+    
     if !is_secondary_instance {
         // this is the primary instance, launch the windowless then exit.
         std::process::Command::new("convert-ogg-mp3.exe")
@@ -76,9 +77,9 @@ async fn main() {
 
 }
 
-async fn convert_for_loop(ogg_files: Vec<String>, start: Instant, tasks_per_chunk: usize) {
+async fn convert_for_loop(ogg_files: Vec<String>, start: Instant, tasks_per_chunk: u8) {
         let ogg_file_len = ogg_files.len();
-     for (index, chunk) in ogg_files.chunks(tasks_per_chunk).enumerate() {
+     for (index, chunk) in ogg_files.chunks(tasks_per_chunk.into()).enumerate() {
         let duration = start.elapsed().as_secs();
         let minutes = duration / 60;
         let seconds = duration % 60;
@@ -168,7 +169,7 @@ fn ask_collection_folder(current_dir: PathBuf) -> Result<Config, io::Error> {
         let config: Config = Config {
             collections_path: input,
             anki_folder: current_dir.to_str().unwrap().to_string(),
-            max_processes: 10,
+            max_processes: 128,
         };
         return Ok(config);
     } else {
