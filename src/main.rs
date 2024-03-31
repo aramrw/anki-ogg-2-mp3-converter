@@ -5,6 +5,9 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 use serde_json::{self, to_string_pretty};
+use winapi::um::winbase::CREATE_NO_WINDOW;
+use std::os::windows::process::CommandExt;
+//const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -32,11 +35,25 @@ impl std::error::Error for ConfigErrors {}
 
 #[tokio::main]
 async fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let is_secondary_instance = args.len() > 1 && args[1] == "secondary";
     let mut start = Instant::now();
     let ogg_files = collect_ogg_files().unwrap();
     let tasks_per_chunk = std::cmp::min(10, num_cpus::get());
-    // If the program gets to here it means the config is validated
-    // launch anki.exe
+    
+    // If the program gets to here it means the config is validated 
+    if !is_secondary_instance {
+        // this is the primary instance, launch the windowless then exit.
+        std::process::Command::new("convert-ogg-mp3.exe")
+        .arg("secondary")
+        .creation_flags(CREATE_NO_WINDOW)
+        .spawn()
+        .unwrap();
+
+        // exit the primary instance once the windowless instance is open
+        std::process::exit(0);
+    }
+    
     let mut child = launch_anki();
 
     convert_for_loop(ogg_files, start, tasks_per_chunk).await;
@@ -167,9 +184,9 @@ fn check_paths() -> Result<Config, ConfigErrors> {
                 match env::current_dir() {
                     Ok(current_dir) => {
                         // If ask_collection_folder() returns an error, it will be propagated upwards
-                        let mut config = ask_collection_folder(current_dir.parent().unwrap().to_path_buf());
+                        let mut config = ask_collection_folder(current_dir.clone());
                         while config.is_err() {
-                            config = ask_collection_folder(current_dir.parent().unwrap().to_path_buf());
+                            config = ask_collection_folder(current_dir.clone());
                         }
                         let config = config.unwrap();
                         let json = to_string_pretty(&config).expect("Failed to serialize config to JSON");
