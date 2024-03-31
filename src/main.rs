@@ -1,6 +1,6 @@
 use core::fmt;
 use std::{
-    env, fs::{self, File, OpenOptions}, io::{self, read_to_string, Error, Write}, path::{Path, PathBuf}, process::{Command, Output}, time::Instant
+    env, fs::{self, File, OpenOptions}, io::{self, read_to_string, Error, Write}, path::{Path, PathBuf}, process::{Child, Command, Output}, thread::sleep, time::{Duration, Instant}
 };
 
 use serde::{Deserialize, Serialize};
@@ -32,11 +32,35 @@ impl std::error::Error for ConfigErrors {}
 
 #[tokio::main]
 async fn main() {
-    let start = Instant::now();
+    let mut start = Instant::now();
     let ogg_files = collect_ogg_files().unwrap();
     let tasks_per_chunk = std::cmp::min(10, num_cpus::get());
+    // If the program gets to here it means the config is validated
+    // launch anki.exe
+    let mut child = launch_anki();
 
-    for (index, chunk) in ogg_files.chunks(tasks_per_chunk).enumerate() {
+    convert_for_loop(ogg_files, start, tasks_per_chunk).await;
+    
+   
+    // Wait for all conversions then check anki status
+    let status = child.wait().unwrap();
+
+    // if program reaches here anki has exited, convert ogg files one more time
+    let final_ogg_files = collect_ogg_files().unwrap();
+    start = Instant::now();
+    convert_for_loop(final_ogg_files, start, tasks_per_chunk).await;
+
+    // let the user see all program messages before exiting
+    println!("\n\nAnki has exited, shutting down...");
+    sleep(Duration::from_secs(5));
+
+    std::process::exit(status.code().unwrap_or(1));
+
+}
+
+async fn convert_for_loop(ogg_files: Vec<String>, start: Instant, tasks_per_chunk: usize) {
+        let ogg_file_len = ogg_files.len();
+     for (index, chunk) in ogg_files.chunks(tasks_per_chunk).enumerate() {
         let duration = start.elapsed().as_secs();
         let minutes = duration / 60;
         let seconds = duration % 60;
@@ -65,10 +89,27 @@ async fn main() {
     let seconds = duration % 60;
         
     if minutes == 0 {
-        println!("\n\nSuccessfully converted {} ogg files in {} seconds!", ogg_files.len(), seconds);
+        println!("\n\nSuccessfully converted {} ogg files in {} seconds!\n\n", ogg_file_len, seconds);
     } else {
-        println!("\n\nSuccessfully converted {} ogg files in {} minutes and {} seconds!", ogg_files.len(), minutes, seconds);
+        println!("\n\nSuccessfully converted {} ogg files in {} minutes and {} seconds!\n\n", ogg_file_len, minutes, seconds);
     }
+   
+    }
+    
+
+
+fn launch_anki() -> Child {
+let config_json_string = fs::read_to_string("./config.json").unwrap();
+    let config: Config = serde_json::from_str(&config_json_string).unwrap();
+    let anki_exe_path = format!("{}\\anki.exe", config.anki_folder);
+    let child = Command::new(anki_exe_path)
+        .spawn()
+        .unwrap();
+
+
+    // println!("Anki exited with status: {}", child);
+    return child;
+
 }
 
 fn collect_ogg_files() -> Result<Vec<String>, Box<dyn std::error::Error>> {
@@ -96,7 +137,6 @@ fn collect_ogg_files() -> Result<Vec<String>, Box<dyn std::error::Error>> {
     }
 }
 
-
 fn ask_collection_folder(current_dir: PathBuf) -> Result<Config, io::Error> {
     let mut input = String::new();
     println!("Example media folder: C:\\Users\\exampleUser\\AppData\\Roaming\\Anki2\\user1\\collection.media");
@@ -115,7 +155,6 @@ fn ask_collection_folder(current_dir: PathBuf) -> Result<Config, io::Error> {
     }
 }
 
-
 fn check_paths() -> Result<Config, ConfigErrors> {
     let path = "./config.json";
     let file_exists = Path::new(path).exists();
@@ -128,9 +167,9 @@ fn check_paths() -> Result<Config, ConfigErrors> {
                 match env::current_dir() {
                     Ok(current_dir) => {
                         // If ask_collection_folder() returns an error, it will be propagated upwards
-                        let mut config = ask_collection_folder(current_dir.clone());
+                        let mut config = ask_collection_folder(current_dir.parent().unwrap().to_path_buf());
                         while config.is_err() {
-                            config = ask_collection_folder(current_dir.clone());
+                            config = ask_collection_folder(current_dir.parent().unwrap().to_path_buf());
                         }
                         let config = config.unwrap();
                         let json = to_string_pretty(&config).expect("Failed to serialize config to JSON");
@@ -261,3 +300,4 @@ async fn convert_ogg_to_mp3(ogg_path: &str) -> Result<Output, Error> {
         }
     }
 }
+
