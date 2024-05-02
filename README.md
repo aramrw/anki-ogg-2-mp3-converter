@@ -8,9 +8,6 @@
 - Converts files on startup and once more when Anki closes for low memory overhead.
 
 ### Installation
-
-[Virus Total Scan](https://www.virustotal.com/gui/file/071a6e8f9bc974adba19eed1dc622fdb44b0ab0db0ab32a17e3c3d399c3c774e?nocache=1)
-
 1. Download `convert-ogg-mp3.exe` from the [Releases](https://github.com/aramrw/anki-ogg-2-mp3-converter/releases) page.
 2. Simply drag and drop the .exe into `Anki's main folder` _(where anki.exe is)_.
 
