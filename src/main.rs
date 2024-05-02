@@ -14,6 +14,7 @@ use std::os::windows::process::CommandExt;
 struct Config {
     collections_path: String,
     anki_folder: String,
+    display_terminal: bool,
     max_processes: u8,
 }
 
@@ -42,9 +43,11 @@ async fn main() {
     let ogg_files = collect_ogg_files().unwrap();
     // If the program gets to here it means the config is validated 
     // get the max processes from config
-    let tasks_per_chunk = std::cmp::min(get_config().max_processes, num_cpus::get().try_into().unwrap());
-    
-    if !is_secondary_instance {
+    let config = get_config();
+    let tasks_per_chunk = std::cmp::min(config.max_processes, num_cpus::get().try_into().unwrap());
+
+    // first check if user has enabled leaving the window open for debugging     
+    if !is_secondary_instance && !config.display_terminal {
         // this is the primary instance, launch the windowless then exit.
         std::process::Command::new("convert-ogg-mp3.exe")
         .arg("secondary")
@@ -56,7 +59,7 @@ async fn main() {
         std::process::exit(0);
     }
     
-    let mut child = launch_anki();
+   let mut child = launch_anki();
 
     convert_for_loop(ogg_files, start, tasks_per_chunk).await;
     
@@ -125,13 +128,12 @@ fn get_config() -> Config {
 fn launch_anki() -> Child {
     let config = get_config();
     let anki_exe_path = format!("{}\\anki.exe", config.anki_folder);
-    let child = Command::new(anki_exe_path)
+
+    Command::new(anki_exe_path)
         .spawn()
-        .unwrap();
+        .unwrap()
 
     // println!("Anki exited with status: {}", child);
-    return child;
-
 }
 
 fn collect_ogg_files() -> Result<Vec<String>, Box<dyn std::error::Error>> {
@@ -140,7 +142,7 @@ fn collect_ogg_files() -> Result<Vec<String>, Box<dyn std::error::Error>> {
             let mut ogg_files = Vec::new();
             println!("\n\nReading directory: {}", config.collections_path);
             let path = config.collections_path;
-            let collection_media_folder = std::fs::read_dir(&path).unwrap();
+            let collection_media_folder = std::fs::read_dir(path).unwrap();
             for entry in collection_media_folder {
                 let entry = entry?;
                 let path = entry.path();
@@ -169,12 +171,14 @@ fn ask_collection_folder(current_dir: PathBuf) -> Result<Config, io::Error> {
         let config: Config = Config {
             collections_path: input,
             anki_folder: current_dir.to_str().unwrap().to_string(),
+            display_terminal: false,
             max_processes: 128,
         };
-        return Ok(config);
+
+        Ok(config)
     } else {
         println!("Invalid collection.media folder. Try again.");
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid collection.media folder"));
+        Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid collection.media folder"))
     }
 }
 
@@ -203,7 +207,7 @@ fn check_paths() -> Result<Config, ConfigErrors> {
                             Ok(config_string) => {
                                 let config: Config = serde_json::from_str(&config_string).expect("Fatal: Error converting config_string to json");
                                 if !config.anki_folder.is_empty() && !config.collections_path.is_empty() {
-                                    return Ok(config);
+                                    Ok(config)
                                 } else if !config.anki_folder.is_empty() {
                                     return Err(ConfigErrors {
                                         file_to_string: None,
@@ -228,30 +232,30 @@ fn check_paths() -> Result<Config, ConfigErrors> {
                                 }
                             }
                             Err(e) => {
-                                return Err(ConfigErrors {
+                                Err(ConfigErrors {
                                     file_to_string: Some(format!("Error reading config_file to config_string: {}", e)),
                                     missing_key: None,
                                     open_as_file: None,
                                     current_dir: None, 
-                                });
+                                })
                             }
                         }
                     },
                     Err(e) => {
-                        return Err(ConfigErrors {
+                        Err(ConfigErrors {
                             current_dir: Some(format!("Error getting current_directory: {}", e)),
                             file_to_string: None,
                             missing_key: None,
                             open_as_file: None,
-                        });
+                        })
                     } 
-                };
+                }
             } else {
                 match read_to_string(&mut config_file) {
                     Ok(config_string) => {
                         let config: Config = serde_json::from_str(&config_string).expect("Fatal: Error converting config_string to json");
                         if !config.anki_folder.is_empty() && !config.collections_path.is_empty() {
-                            return Ok(config);
+                            Ok(config)
                         } else if !config.anki_folder.is_empty() {
                             return Err(ConfigErrors {
                                 file_to_string: None,
@@ -276,23 +280,23 @@ fn check_paths() -> Result<Config, ConfigErrors> {
                         }
                     }
                     Err(e) => {
-                        return Err(ConfigErrors {
+                        Err(ConfigErrors {
                             file_to_string: Some(format!("Error reading config_file to config_string: {}", e)),
                             missing_key: None,
                             open_as_file: None,
                             current_dir: None, 
-                        });
+                        })
                     }
                 }
             }
         }
         Err(e) => {
-            return Err(ConfigErrors {
+            Err(ConfigErrors {
                 file_to_string: None,
                 missing_key: None,
                 open_as_file: format!("Error opening config as File: {}", e).into(),
                 current_dir: None,
-            });
+            })
         }
     }
 }
@@ -300,12 +304,12 @@ fn check_paths() -> Result<Config, ConfigErrors> {
 
 async fn convert_ogg_to_mp3(ogg_path: &str) -> Result<Output, Error> {
     let mut output_path = String::new();
-        if let Some((left, _right)) = &ogg_path.rsplit_once(".") {
+        if let Some((left, _right)) = &ogg_path.rsplit_once('.') {
             let joined = format!("{}.mp3", left);
             output_path = joined;
         }
     let output = Command::new("ffmpeg")
-        .args(&["-i", ogg_path, "-codec:a", "libmp3lame", &output_path])
+        .args(["-i", ogg_path, "-codec:a", "libmp3lame", &output_path])
         .output();
 
     match output {
@@ -319,7 +323,7 @@ async fn convert_ogg_to_mp3(ogg_path: &str) -> Result<Output, Error> {
         },
         Err(e) => {
             eprint!("Failed to execute command: {}", e);
-            return Err(e);
+            Err(e)
         }
     }
 }
