@@ -13,3 +13,6 @@ num_cpus = { version = "1.16.0" }
 futures = { version = "0.3.30" }
 walkdir = { version = "2.5.0" }
 winapi = { version = "0.3.9" }
+thiserror = "1.0.61"
+promptuity = "0.0.5"
+time = { version = "0.3.36", features = ["local-offset"] }
